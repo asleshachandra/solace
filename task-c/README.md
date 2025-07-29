@@ -1,4 +1,4 @@
-ask C – Solace Lite End-to-End Demo
+Task C – Solace Lite End-to-End Demo
 
 This project prototypes a minimal voice-to-voice companion demo integrating secure audio capture, basic encryption, backend upload/download, ASR, chatbot, and TTS features.
 
