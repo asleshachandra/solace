@@ -1,0 +1,48 @@
+import json
+import boto3
+import os
+import traceback
+
+s3 = boto3.client('s3')
+kms = boto3.client('kms')
+
+def lambda_handler(event, context):
+    print("Received event:", json.dumps(event))
+    try:
+        body = json.loads(event['body'])
+        blob_key = body['blobKey']
+        bucket = os.environ['BUCKET']
+        kms_key_id = os.environ['KMS_KEY_ID']
+
+        # Get encrypted blob from S3
+        response = s3.get_object(Bucket=bucket, Key=blob_key)
+        encrypted_blob = response['Body'].read()
+
+        # Decrypt with KMS
+        decrypted = kms.decrypt(
+            CiphertextBlob=encrypted_blob,
+            KeyId=kms_key_id
+        )
+
+        plaintext = decrypted['Plaintext'].decode('utf-8')
+
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({ "plaintext": plaintext })
+        }
+
+    except Exception as e:
+        print("ERROR TRACEBACK:", traceback.format_exc())
+
+        return {
+            "statusCode": 500,
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": json.dumps({
+                "error": str(e),
+                "trace": traceback.format_exc()
+            
